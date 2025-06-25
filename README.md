@@ -3,10 +3,10 @@
 A custom ComfyUI node that allows side-by-side comparison of two videos with an interactive slider interface, inspired by rgthree's image compare tool.
 
 
-![demo 1](https://github.com/casterpollux/video-compare-bmo/blob/master/examples/diff.gif)
-![demo 2](https://github.com/casterpollux/video-compare-bmo/blob/master/examples/horixzontal.gif)
-![demo 3](https://github.com/casterpollux/video-compare-bmo/blob/master/examples/vertical.gif)
-![demo 4](https://github.com/casterpollux/video-compare-bmo/blob/master/examples/side.gif)
+![demo 1]()
+![demo 2]()
+![demo 3]()
+![demo 4]()
 
 
 ## Features
