@@ -1,0 +1,20 @@
+# Video_Compare_BMO Requirements
+# Core dependencies for the video comparison node
+
+# Computer Vision and Image Processing
+opencv-python>=4.8.0
+pillow>=9.0.0
+
+# Scientific Computing
+numpy>=1.21.0
+
+# PyTorch (ComfyUI will have this, but listing for completeness)
+# torch>=2.0.0
+# torchvision>=0.15.0
+
+# Note: ComfyUI already provides torch, torchvision, and other ML dependencies
+# This file lists additional dependencies specific to Video_Compare_BMO
+
+# Development/Testing (optional)
+# pytest>=7.0.0
+# black>=22.0.0 
