@@ -2,6 +2,13 @@
 
 A custom ComfyUI node that allows side-by-side comparison of two videos with an interactive slider interface, inspired by rgthree's image compare tool.
 
+
+![demo 1]()
+![demo 2]()
+![demo 3]()
+![demo 4]()
+
+
 ## Features
 
 - **Interactive Slider**: Real-time comparison with a draggable slider
