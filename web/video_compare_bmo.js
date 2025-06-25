@@ -115,6 +115,12 @@ app.registerExtension({
                     console.log("[Video_Compare_BMO] Current widget state:", this.state);
                     
                     if (mode === 'side_by_side') {
+                        // Clean up any diagonal SVG lines from previous modes
+                        const existingSvgSideBySide = this.videoContainer.querySelector('.diagonal-line-svg');
+                        if (existingSvgSideBySide) {
+                            existingSvgSideBySide.remove();
+                        }
+                        
                         // Side-by-side mode: show only the combined video in videoA
                         this.videoA.style.position = "absolute";
                         this.videoA.style.top = "0";
@@ -186,7 +192,14 @@ app.registerExtension({
                     
                     switch(direction) {
                         case 'horizontal':
+                            // Clean up any diagonal SVG lines
+                            const existingSvgH = this.videoContainer.querySelector('.diagonal-line-svg');
+                            if (existingSvgH) {
+                                existingSvgH.remove();
+                            }
+                            
                             this.videoB.style.clipPath = `inset(0 0 0 ${clipPercent}%)`;
+                            this.sliderHandle.style.display = "block";
                             this.sliderHandle.style.left = `${clipPercent}%`;
                             this.sliderHandle.style.top = "0";
                             this.sliderHandle.style.width = "4px";
@@ -197,7 +210,14 @@ app.registerExtension({
                             break;
                             
                         case 'vertical':
+                            // Clean up any diagonal SVG lines
+                            const existingSvgV = this.videoContainer.querySelector('.diagonal-line-svg');
+                            if (existingSvgV) {
+                                existingSvgV.remove();
+                            }
+                            
                             this.videoB.style.clipPath = `inset(${clipPercent}% 0 0 0)`;
+                            this.sliderHandle.style.display = "block";
                             this.sliderHandle.style.top = `${clipPercent}%`;
                             this.sliderHandle.style.left = "0";
                             this.sliderHandle.style.width = "100%";
@@ -210,38 +230,90 @@ app.registerExtension({
                             break;
                             
                         case 'diagonal':
-                            // Diagonal clip-path using polygon
-                            const points = [
-                                [0, 0],
-                                [clipPercent, 0],
-                                [100, 100 - clipPercent],
-                                [100, 100],
-                                [0, 100]
-                            ];
+                            // The wipe reveals videoA by clipping videoB along a 45-degree line.
+                            const linePosition = clipPercent * 2; // Convert 0-100% to 0-200% for the diagonal
+
+                            // This polygon logic correctly creates a 45-degree wipe from top-left to bottom-right.
+                            let points;
+                            if (linePosition <= 100) {
+                                points = [
+                                    [0, linePosition], [linePosition, 0], [100, 0], [100, 100], [0, 100]
+                                ];
+                            } else {
+                                const adjustedPos = linePosition - 100;
+                                points = [
+                                    [adjustedPos, 100], [100, adjustedPos], [100, 100]
+                                ];
+                            }
                             const polygonPath = points.map(p => `${p[0]}% ${p[1]}%`).join(', ');
                             this.videoB.style.clipPath = `polygon(${polygonPath})`;
                             
-                            // Position handle diagonally with consistent white bar styling
-                            this.sliderHandle.style.left = `${clipPercent}%`;
-                            this.sliderHandle.style.top = `${100 - clipPercent}%`;
-                            this.sliderHandle.style.width = "60px";
-                            this.sliderHandle.style.height = "4px";
-                            this.sliderHandle.style.borderRadius = "0";
-                            this.sliderHandle.style.backgroundColor = "rgba(255, 255, 255, 0.8)";
-                            this.sliderHandle.style.border = "none";
-                            this.sliderHandle.style.boxShadow = "none";
-                            this.sliderHandle.style.zIndex = "10";
-                            this.sliderHandle.style.display = "block";
-                            this.sliderHandle.style.visibility = "visible";
-                            this.sliderHandle.style.opacity = "1";
-                            this.sliderHandle.style.transform = "translate(-50%, -50%) rotate(45deg)";
+                            // Hide the default slider handle for diagonal mode
+                            this.sliderHandle.style.display = "none";
+                            
+                            // --- CREATE WHITE LINE AT EXACT WIPE COORDINATES ---
+
+                            // Create a line that follows the exact wipe boundary using SVG
+                            let x1, y1, x2, y2;
+                            
+                            if (linePosition <= 100) {
+                                // Line goes from (0, linePosition) to (linePosition, 0)
+                                x1 = 0;
+                                y1 = linePosition;
+                                x2 = linePosition;
+                                y2 = 0;
+                            } else {
+                                // Line goes from (linePosition-100, 100) to (100, linePosition-100)
+                                const adjustedPos = linePosition - 100;
+                                x1 = adjustedPos;
+                                y1 = 100;
+                                x2 = 100;
+                                y2 = adjustedPos;
+                            }
+
+                            // Remove any existing SVG
+                            const existingSvg = this.videoContainer.querySelector('.diagonal-line-svg');
+                            if (existingSvg) {
+                                existingSvg.remove();
+                            }
+
+                            // Create SVG line that matches the exact wipe coordinates
+                            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                            svg.classList.add('diagonal-line-svg');
+                            svg.style.position = 'absolute';
+                            svg.style.top = '0';
+                            svg.style.left = '0';
+                            svg.style.width = '100%';
+                            svg.style.height = '100%';
+                            svg.style.pointerEvents = 'none';
+                            svg.style.zIndex = '30';
+                            
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line.setAttribute('x1', `${x1}%`);
+                            line.setAttribute('y1', `${y1}%`);
+                            line.setAttribute('x2', `${x2}%`);
+                            line.setAttribute('y2', `${y2}%`);
+                            line.setAttribute('stroke', 'white');
+                            line.setAttribute('stroke-width', '3');
+                            line.setAttribute('drop-shadow', '0 0 6px rgba(0,0,0,0.8)');
+                            
+                            svg.appendChild(line);
+                            this.videoContainer.appendChild(svg);
+                            
                             this.videoContainer.style.cursor = "nwse-resize";
-                            console.log("[Video_Compare_BMO] Applied diagonal slider with maximum visibility");
+                            console.log(`[Video_Compare_BMO] Applied corrected diagonal slider - SVG line created`);
                             break;
                             
                         default:
                             console.warn(`[Video_Compare_BMO] Unknown direction: ${direction}, defaulting to horizontal`);
+                            // Clean up any diagonal SVG lines
+                            const existingSvgDefault = this.videoContainer.querySelector('.diagonal-line-svg');
+                            if (existingSvgDefault) {
+                                existingSvgDefault.remove();
+                            }
+                            
                             this.videoB.style.clipPath = `inset(0 0 0 ${clipPercent}%)`;
+                            this.sliderHandle.style.display = "block";
                             this.sliderHandle.style.left = `${clipPercent}%`;
                             this.sliderHandle.style.top = "0";
                             this.sliderHandle.style.width = "4px";
@@ -478,24 +550,20 @@ app.registerExtension({
                             break;
                             
                         case 'diagonal':
-                            // For diagonal, we need to project mouse position onto the main diagonal line
+                            // For diagonal, we need the position along the diagonal line from top-left to bottom-right
                             const dx = e.clientX - rect.left;
                             const dy = e.clientY - rect.top;
                             const normalizedX = dx / rect.width;
                             const normalizedY = dy / rect.height;
                             
-                            // Project the mouse position onto the main diagonal (top-left to bottom-right)
-                            // The diagonal line equation is y = x, so we find the closest point on this line
-                            // For a point (x,y), the projection onto y=x line is ((x+y)/2, (x+y)/2)
-                            const diagonalProjection = (normalizedX + normalizedY) / 2;
+                            // For a diagonal line from top-left to bottom-right:
+                            // The line equation is: x + y = constant
+                            // At any point on the line, x + y gives us the position along the diagonal
+                            // When x + y = 0, we're at top-left corner (0% split)
+                            // When x + y = 2, we're at bottom-right corner (100% split)
+                            splitPos = Math.max(0, Math.min(1, (normalizedX + normalizedY) / 2));
                             
-                            // However, we need to account for the fact that diagonal movement covers sqrt(2) times the distance
-                            // To reach the corner (1,1), the diagonal distance is sqrt(2), but we want it to map to 100%
-                            // So we need to scale the projection by sqrt(2) to get proper sensitivity
-                            const diagonalSensitivity = Math.sqrt(2);
-                            splitPos = Math.max(0, Math.min(1, diagonalProjection * diagonalSensitivity));
-                            
-                            console.log(`[Video_Compare_BMO] Diagonal calculation: x=${normalizedX.toFixed(3)}, y=${normalizedY.toFixed(3)}, projection=${diagonalProjection.toFixed(3)}, sensitivity=${diagonalSensitivity.toFixed(3)}, splitPos=${splitPos.toFixed(3)}`);
+                            console.log(`[Video_Compare_BMO] Diagonal calculation: x=${normalizedX.toFixed(3)}, y=${normalizedY.toFixed(3)}, sum=${(normalizedX + normalizedY).toFixed(3)}, splitPos=${splitPos.toFixed(3)}`);
                             break;
                             
                         default:
