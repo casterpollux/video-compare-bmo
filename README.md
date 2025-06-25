@@ -6,8 +6,6 @@ A custom ComfyUI node that allows side-by-side comparison of two videos with an 
 ![demo 1](https://github.com/casterpollux/video-compare-bmo/blob/master/examples/diff.gif)
 ![demo 2](https://github.com/casterpollux/video-compare-bmo/blob/master/examples/horixzontal.gif)
 ![demo 3](https://github.com/casterpollux/video-compare-bmo/blob/master/examples/side.gif)
-![demo 4](https://github.com/casterpollux/video-compare-bmo/blob/master/examples/diff.gif)
-
 
 
 
